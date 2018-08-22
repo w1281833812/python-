@@ -54,4 +54,8 @@ def create_app(config_type):
     # 配置日志文件
     setup_log()
 
+    # 让模型文件和主程序建立关系
+    # from info.models import *  # import * 语法不能在局部作用域(方法/函数)中使用
+    from info import models
+
     return app
