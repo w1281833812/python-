@@ -1,6 +1,9 @@
-from flask import Flask
+from datetime import timedelta
+
+from flask import Flask, session
 from flask_sqlalchemy import SQLAlchemy
 from redis import StrictRedis
+from flask_session import Session
 
 
 class Config:  # 自定义配置类
@@ -9,6 +12,11 @@ class Config:  # 自定义配置类
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # 是否追踪数据库变化
     REDIS_HOST = "127.0.0.1"  # redis的ip
     REDIS_PORT = 6379  # redis的端口
+    SESSION_TYPE = "redis"  # session存储的数据库类型
+    SESSION_REDIS = StrictRedis(host=REDIS_HOST, port=REDIS_PORT)  # 设置session存储使用的redis连接对象
+    SESSION_USE_SIGNER = True  # 对cookie中保存的sessionid进行加密(需要使用app的秘钥)
+    SECRET_KEY = "DxY3z7jndzYaiY1ndZh+OJOv800zHpRZiWwwNBjC5PAQ1IEMMcWqiyQ8xn2lviMg"  # 应用秘钥
+    PERMANENT_SESSION_LIFETIME = timedelta(days=7)  # 设置session存储时间(session默认会进行持久化)
 
 
 app = Flask(__name__)
@@ -18,11 +26,13 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 # 创建redis连接对象
 sr = StrictRedis(host=Config.REDIS_HOST, port=Config.REDIS_PORT)
+# 初始化Session存储对象
+Session(app)
 
 
 @app.route('/')
 def index():
-    sr.set("name", "zs")
+    session["name"] = "zs"
     return 'index'
 
 
