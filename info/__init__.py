@@ -5,7 +5,10 @@ from flask_sqlalchemy import SQLAlchemy
 from redis import StrictRedis
 
 from config import config_dict
-from info.modules.home import home_blu
+
+# 将数据库操作对象全局化 方便其他文件操作数据库
+db = None  # type: SQLAlchemy
+sr = None  # type: StrictRedis
 
 
 # 定义函数来封装应用的创建   工厂函数
@@ -15,6 +18,9 @@ def create_app(config_type):
     app = Flask(__name__)
     # 根据配置类来加载应用配置
     app.config.from_object(config_class)
+    
+    # 声明全局变量
+    global db, sr
     # 创建数据库连接对象
     db = SQLAlchemy(app)
     # 创建redis连接对象
@@ -25,6 +31,7 @@ def create_app(config_type):
     Migrate(app, db)
 
     # 3. 注册蓝图
+    from info.modules.home import home_blu
     app.register_blueprint(home_blu)
 
     return app
