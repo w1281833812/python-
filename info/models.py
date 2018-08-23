@@ -80,6 +80,15 @@ class User(BaseModel, db.Model):
             "last_login": self.last_login.strftime("%Y-%m-%d %H:%M:%S"),
         }
         return resp_dict
+    
+    @property
+    def password(self):
+        raise AttributeError("该属性是计算性属性, 不能直接取值") 
+    
+    @password.setter
+    def password(self, value):
+        self.password_hash = generate_password_hash(value)
+    
 
 
 class News(BaseModel, db.Model):

@@ -1,10 +1,12 @@
 import random
 import re
+from datetime import datetime
 
-from flask import request, abort, current_app, make_response, Response, jsonify
+from flask import request, abort, current_app, make_response, Response, jsonify, session
 
-from info import sr
+from info import sr, db
 from info.lib.yuntongxun.sms import CCP
+from info.models import User
 from info.modules.passport import passport_blu
 from info.utils.captcha.pic_captcha import captcha
 
@@ -63,6 +65,17 @@ def get_sms_code():
     if img_code.upper() != real_img_code:  # 校验验证码是否正确
         return jsonify(errno=RET.PARAMERR, errmsg="验证码错误")
 
+    # 根据手机号从数据库中取出对应的记录
+    try:
+        user = User.query.filter_by(mobile=mobile).first()
+    except BaseException as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg=error_map[RET.DBERR])
+
+    # 判断该用户是否存在
+    if user:  # 提示用户已存在
+        return jsonify(errno=RET.DATAEXIST, errmsg=error_map[RET.DATAEXIST])
+
     # 如果校验成功, 发送短信
     # 生成4位随机数字
     sms_code = "%04d" % random.randint(0, 9999)
@@ -78,4 +91,54 @@ def get_sms_code():
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg=error_map[RET.DBERR])
     # 将短信发送结果使用json返回
+    return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])
+
+
+@passport_blu.route('/register', methods=['POST'])
+def register():
+    # 获取参数  request.json可以获取到application/json格式传过来的json数据
+    mobile = request.json.get("mobile")
+    password = request.json.get("password")
+    sms_code = request.json.get("sms_code")
+    # 校验参数
+    if not all([mobile, password, sms_code]):
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    # 校验手机号格式
+    if not re.match(r"1[35678]\d{9}$", mobile):
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    # 根据手机号取出短信验证码文字
+    try:
+        real_sms_code = sr.get("sms_code_id_" + mobile)
+    except BaseException as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg=error_map[RET.DBERR])
+    # 校验图片验证码
+    if not real_sms_code:  # 校验是否已过期
+        return jsonify(errno=RET.PARAMERR, errmsg="验证码已过期")
+
+    if sms_code != real_sms_code:  # 校验验证码是否正确
+        return jsonify(errno=RET.PARAMERR, errmsg="验证码错误")
+
+    # 将用户数据保存到数据库
+    user = User()
+    user.mobile = mobile
+    # 使用计算性属性password对密码加密过程进行封装
+    user.password = password
+    user.nick_name = mobile
+    # 记录用户最后的登录时间
+    user.last_login = datetime.now()
+
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except BaseException as e:
+        current_app.logger.error(e)
+        db.session.rollback()  # 设置回滚
+        return jsonify(errno=RET.DBERR, errmsg=error_map[RET.DBERR])
+
+    # 状态保持  免密码登录
+    session["user_id"] = user.id
+
     return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])
