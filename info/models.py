@@ -58,7 +58,7 @@ class User(BaseModel, db.Model):
     news_list = db.relationship('News', backref='user', lazy='dynamic')
 
 
-    def to_dict(self):
+    def to_dict(self):  # 对一些模型数据进行格式化处理(封装展示效果)
         resp_dict = {
             "id": self.id,
             "nick_name": self.nick_name,
