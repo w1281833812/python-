@@ -1,10 +1,12 @@
-from info.constants import CLICK_RANK_MAX_NEWS
+from info.constants import CLICK_RANK_MAX_NEWS, HOME_PAGE_MAX_NEWS
 from info.models import User, News
 from info.modules.home import home_blu
-from flask import render_template, current_app, session
-
+from flask import render_template, current_app, session, request, jsonify
 
 # 2.使用蓝图来装饰路由
+from info.utils.response_code import RET, error_map
+
+
 @home_blu.route('/')
 def index():
     # 判断用户是否登录
@@ -35,3 +37,42 @@ def index():
 def favicon():
     # send_static_file用于返回静态文件
     return current_app.send_static_file("news/favicon.ico")
+
+
+# 获取新闻列表
+@home_blu.route('/get_news_list')
+def get_news_list():
+    # 获取参数
+    cid = request.args.get("cid")
+    cur_page = request.args.get("cur_page")
+    per_count = request.args.get("per_count", HOME_PAGE_MAX_NEWS)
+    # 校验参数
+    if not all([cid, cur_page]):
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    # 将参数转为整型
+    try:
+        cid = int(cid)
+        per_count = int(per_count)
+        cur_page = int(cur_page)
+    except BaseException as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    filter_list = []
+    if cid != 1:
+        filter_list.append(News.category_id == cid)
+    # 根据参数查询新闻数据  按照分类进行分页查询(生成日期倒序)
+    try:
+        pn = News.query.filter(*filter_list).order_by(News.create_time.desc()).paginate(cur_page, per_count)
+    except BaseException as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg=error_map[RET.DBERR])
+
+    data = {
+        "news_list": [news.to_dict() for news in pn.items],
+        "total_page": pn.pages
+    }
+
+    # 将数据以json返回
+    return jsonify(errno=RET.OK, errmsg=error_map[RET.OK], data=data)
