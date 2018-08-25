@@ -181,3 +181,12 @@ def login():
 
     # 将校验结果以json返回
     return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])
+
+
+# 退出登录
+@passport_blu.route('/logout')
+def logout():
+    # 将用户信息从session中删除  pop可以设置默认值, 当键值对不存在时, 不会报错并返回默认值
+    session.pop("user_id", None)
+    # 将结果返回
+    return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])
