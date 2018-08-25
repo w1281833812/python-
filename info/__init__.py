@@ -13,6 +13,7 @@ from config import config_dict
 db = None  # type: SQLAlchemy
 sr = None  # type: StrictRedis
 
+from info.common import index_convert
 
 # 配置日志文件(将日志信息写入到文件中)
 def setup_log(level):
@@ -60,5 +61,8 @@ def create_app(config_type):
     # 让模型文件和主程序建立关系
     # from info.models import *  # import * 语法不能在局部作用域(方法/函数)中使用
     from info import models
+
+    # 添加自定义的过滤器
+    app.add_template_filter(index_convert, "index_convert")
 
     return app
