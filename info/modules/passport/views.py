@@ -94,6 +94,7 @@ def get_sms_code():
     return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])
 
 
+# 用户注册
 @passport_blu.route('/register', methods=['POST'])
 def register():
     # 获取参数  request.json可以获取到application/json格式传过来的json数据
@@ -141,4 +142,36 @@ def register():
     # 状态保持  免密码登录
     session["user_id"] = user.id
 
+    return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])
+
+
+# 用户登录
+@passport_blu.route('/login', methods=['POST'])
+def login():
+    # 获取参数
+    mobile = request.json.get("mobile")
+    password = request.json.get("password")
+    # 校验参数
+    if not all([mobile, password]):
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    # 校验手机号格式
+    if not re.match(r"1[35678]\d{9}$", mobile):
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    # 根据手机号从数据库中取出用户模型
+    try:
+        user = User.query.filter_by(mobile=mobile).first()
+    except BaseException as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg=error_map[RET.DBERR])
+
+    if not user:
+        return jsonify(errno=RET.USERERR, errmsg=error_map[RET.USERERR])
+
+    # 校验密码
+    if not user.check_password(password):
+        return jsonify(errno=RET.PWDERR, errmsg=error_map[RET.PWDERR])
+
+    # 将校验结果以json返回
     return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])
