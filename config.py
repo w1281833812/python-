@@ -14,6 +14,7 @@ class Config:  # 自定义配置类
     SESSION_USE_SIGNER = True  # 对cookie中保存的sessionid进行加密(需要使用app的秘钥)
     SECRET_KEY = "DxY3z7jndzYaiY1ndZh+OJOv800zHpRZiWwwNBjC5PAQ1IEMMcWqiyQ8xn2lviMg"  # 应用秘钥
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)  # 设置session存储时间(session默认会进行持久化)
+    SQLALCHEMY_COMMIT_ON_TEARDOWN = True  # 设置数据发生修改后自动提交
 
 
 class DevelopConfig(Config):  # 定义开发环境的配置

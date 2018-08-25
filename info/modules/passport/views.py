@@ -173,5 +173,11 @@ def login():
     if not user.check_password(password):
         return jsonify(errno=RET.PWDERR, errmsg=error_map[RET.PWDERR])
 
+    # 记录用户最后的登录时间
+    user.last_login = datetime.now()
+
+    # 状态保持
+    session["user_id"] = user.id
+
     # 将校验结果以json返回
     return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])
