@@ -20,4 +20,4 @@ def news_detail(news_id):
     # 让新闻的点击量+1
     news.clicks += 1
     # 将模型数据传到模板中
-    return render_template("detail.html", news=news.to_dict())
+    return render_template("news/detail.html", news=news.to_dict())

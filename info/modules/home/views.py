@@ -37,7 +37,7 @@ def index():
     except BaseException as e:
         current_app.logger.error(e)
 
-    return render_template("index.html", user=user, rank_list=rank_list, categories=categories)
+    return render_template("news/index.html", user=user, rank_list=rank_list, categories=categories)
 
 
 # 设置图标

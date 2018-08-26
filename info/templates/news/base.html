@@ -2,27 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>首页-新经资讯</title>
-    <link rel="stylesheet" type="text/css" href="../static/news/css/reset.css">
-    <link rel="stylesheet" type="text/css" href="../static/news/css/main.css">
-    <script type="text/javascript" src="../static/news/js/jquery-1.12.4.min.js"></script>
-    <script type="text/javascript" src="../static/news/js/main.js"></script>
-    <script type="text/javascript" src="../static/news/js/index.js"></script>
+    {% block title_block %}
+    
+    {% endblock %}
+    <link rel="stylesheet" type="text/css" href="../../static/news/css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../../static/news/css/main.css">
+    <script type="text/javascript" src="../../static/news/js/jquery-1.12.4.min.js"></script>
+    <script type="text/javascript" src="../../static/news/js/main.js"></script>
+    {% block script_block %}
+    
+    {% endblock %}
 </head>
 <body>
 <div class="header_con">
     <div class="header">
-        <a href="#" class="logo fl"><img src="../static/news/images/logo.png" alt="logo"></a>
-        <ul class="menu fl">
-            {% for category in categories %}
-                <li {% if loop.index == 1 %}class="active"{% endif %} data-cid="{{ category.id }}"><a href="javascript:;">{{ category.name }}</a></li>
-            {% endfor %}
-        </ul>
+        <a href="#" class="logo fl"><img src="../../static/news/images/logo.png" alt="logo"></a>
+        {% block category_block %}
+
+        {% endblock %}
 
         {% if user %}
             <div class="user_login fr">
                 <img {% if user.avatar_url %}src="{{ user.avatar_url }}"
-                     {% else %}src="../static/news/images/person01.png"{% endif %} class="lgin_pic">
+                     {% else %}src="../../static/news/images/person01.png"{% endif %} class="lgin_pic">
                 <a href="#" id="nick_name">{{ user.nick_name }}</a>
                 <a href="javascript:;" onclick="logout()">退出</a>
             </div>
@@ -35,9 +37,13 @@
 </div>
 
 <div class="conter_con">
-    <ul class="list_con fl">
-    </ul>
+    {% block content_block %}
+    
+    {% endblock %}
     <div class="rank_con fr">
+        {% block author_block %}
+
+        {% endblock %}
         <div class="rank_title">
             <h3>点击排行</h3>
         </div>
@@ -104,7 +110,7 @@
         <div class="form_group">
             <input type="text" name="code_pwd" id="imagecode" class="code_pwd">
             <div class="input_tip">图形验证码</div>
-            <img src="../static/news/images/pic_code.png" class="get_pic_code" onclick="generateImageCode()">
+            <img src="../../static/news/images/pic_code.png" class="get_pic_code" onclick="generateImageCode()">
             <div id="register-image-code-err" class="error_tip">图形码不能为空</div>
         </div>
         <div class="form_group">
