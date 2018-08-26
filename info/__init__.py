@@ -13,8 +13,6 @@ from config import config_dict
 db = None  # type: SQLAlchemy
 sr = None  # type: StrictRedis
 
-from info.common import index_convert
-
 # 配置日志文件(将日志信息写入到文件中)
 def setup_log(level):
     # 设置日志的记录等级
@@ -65,6 +63,7 @@ def create_app(config_type):
     from info import models
 
     # 添加自定义的过滤器
+    from info.common import index_convert
     app.add_template_filter(index_convert, "index_convert")
 
     return app
