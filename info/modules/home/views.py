@@ -73,6 +73,7 @@ def get_news_list():
     # 根据参数查询新闻数据  按照分类进行分页查询(生成日期倒序)
     try:
         pn = News.query.filter(*filter_list).order_by(News.create_time.desc()).paginate(cur_page, per_count)
+        # filter(*[News.category_id == cid]) -> filter(News.category_id == cid)
     except BaseException as e:
         current_app.logger.error(e)
         return jsonify(errno=RET.DBERR, errmsg=error_map[RET.DBERR])

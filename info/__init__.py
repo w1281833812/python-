@@ -53,6 +53,8 @@ def create_app(config_type):
     app.register_blueprint(home_blu)
     from info.modules.passport import passport_blu
     app.register_blueprint(passport_blu)
+    from info.modules.news import news_blu
+    app.register_blueprint(news_blu)
 
 
     # 配置日志文件
