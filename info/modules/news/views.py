@@ -154,3 +154,50 @@ def news_comment():
         return jsonify(errno=RET.DBERR, errmsg=error_map[RET.DBERR])
     # json返回结果
     return jsonify(errno=RET.OK, errmsg=error_map[RET.OK], data=comment.to_dict())
+
+
+
+# 点赞/取消点赞
+@news_blu.route('/comment_like', methods=['POST'])
+@user_login_data
+def comment_like():
+    # 判断用户是否登录
+    user = g.user
+    if not user:
+        return jsonify(errno=RET.SESSIONERR, errmsg=error_map[RET.SESSIONERR])
+    # 获取参数
+    comment_id = request.json.get("comment_id")
+    action = request.json.get("action")
+    # 校验参数
+    if not all([comment_id, action]):
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    try:
+        comment_id = int(comment_id)
+    except BaseException as e:
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    if action not in ["add", "remove"]:
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    try:
+        comment = Comment.query.get(comment_id)
+    except BaseException as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg=error_map[RET.DBERR])
+
+    if not comment:
+        return jsonify(errno=RET.NODATA, errmsg=error_map[RET.NODATA])
+
+    # 根据action执行处理(user_id和comment_id建立/取消关系)
+    if action == "add":  # 点赞
+        if comment not in user.like_comments:
+            user.like_comments.append(comment)
+            comment.like_count += 1
+    else:  # 取消点赞
+        if comment in user.like_comments:
+            user.like_comments.remove(comment)
+            comment.like_count -= 1
+
+    # 返回json结果
+    return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])
