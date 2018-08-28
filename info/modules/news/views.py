@@ -45,13 +45,24 @@ def news_detail(news_id):
     # 查询该新闻的所有评论,传到模板中
     # comments = [comment.to_dict() for comment in news.comments]
     comments = Comment.query.filter(Comment.news_id == news.id).order_by(Comment.create_time.desc()).all()
-    comments = [comment.to_dict() for comment in comments]
+
+    # 查询当前用户是否对某条评论点过赞
+    comments_list = []
+    if user:
+        for comment in comments:
+            is_like = False
+            comment_dict = comment.to_dict()
+            if comment in user.like_comments:
+                is_like = True
+            comment_dict["is_like"] = is_like
+            # 将评论字典加入列表中
+            comments_list.append(comment_dict)
 
     # 将用户登录信息传到模板中
     user = user.to_dict() if user else None
 
     # 将模型数据传到模板中
-    return render_template("news/detail.html", news=news.to_dict(), rank_list=rank_list, user=user, is_collected=is_collected, comments=comments)
+    return render_template("news/detail.html", news=news.to_dict(), rank_list=rank_list, user=user, is_collected=is_collected, comments=comments_list)
 
 
 # 收藏/取消收藏
