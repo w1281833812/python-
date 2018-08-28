@@ -34,13 +34,11 @@ def news_detail(news_id):
 
     rank_list = [news.to_basic_dict() for news in rank_list]
 
-
-
     # 查询当前用户是否收藏了该新闻
     is_collected = False
     user = g.user
     if user:
-        if news in user.collection_news:
+        if news in user.collection_news:  # 当执行了懒查询的关系属性和in联用时(if in / for in), 会直接执行查询, 而不需要添加all()
             is_collected = True
 
     # 将用户登录信息传到模板中
