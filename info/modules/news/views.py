@@ -42,11 +42,16 @@ def news_detail(news_id):
         if news in user.collection_news:  # 当执行了懒查询的关系属性和in联用时(if in / for in), 会直接执行查询, 而不需要添加all()
             is_collected = True
 
+    # 查询该新闻的所有评论,传到模板中
+    # comments = [comment.to_dict() for comment in news.comments]
+    comments = Comment.query.filter(Comment.news_id == news.id).order_by(Comment.create_time.desc()).all()
+    comments = [comment.to_dict() for comment in comments]
+
     # 将用户登录信息传到模板中
     user = user.to_dict() if user else None
 
     # 将模型数据传到模板中
-    return render_template("news/detail.html", news=news.to_dict(), rank_list=rank_list, user=user, is_collected=is_collected)
+    return render_template("news/detail.html", news=news.to_dict(), rank_list=rank_list, user=user, is_collected=is_collected, comments=comments)
 
 
 # 收藏/取消收藏
