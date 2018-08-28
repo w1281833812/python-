@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     {% block title_block %}
-    
+
     {% endblock %}
     <link rel="stylesheet" type="text/css" href="../../static/news/css/reset.css">
     <link rel="stylesheet" type="text/css" href="../../static/news/css/main.css">
     <script type="text/javascript" src="../../static/news/js/jquery-1.12.4.min.js"></script>
     <script type="text/javascript" src="../../static/news/js/main.js"></script>
     {% block script_block %}
-    
+
     {% endblock %}
 </head>
 <body>
@@ -25,7 +25,7 @@
             <div class="user_login fr">
                 <img {% if user.avatar_url %}src="{{ user.avatar_url }}"
                      {% else %}src="../../static/news/images/person01.png"{% endif %} class="lgin_pic">
-                <a href="#" id="nick_name">{{ user.nick_name }}</a>
+                <a href="{{ url_for("user.user_info") }}" id="nick_name">{{ user.nick_name }}</a>
                 <a href="javascript:;" onclick="logout()">退出</a>
             </div>
         {% else %}
@@ -38,8 +38,9 @@
 
 <div class="conter_con">
     {% block content_block %}
-    
+
     {% endblock %}
+    {% block rank_block %}
     <div class="rank_con fr">
         {% block author_block %}
 
@@ -54,6 +55,8 @@
             {% endfor %}
         </ul>
     </div>
+    {% endblock %}
+
 </div>
 
 <div class="footer">
