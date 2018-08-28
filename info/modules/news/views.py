@@ -48,10 +48,10 @@ def news_detail(news_id):
 
     # 查询当前用户是否对某条评论点过赞
     comments_list = []
-    if user:
-        for comment in comments:
-            is_like = False
-            comment_dict = comment.to_dict()
+    for comment in comments:
+        is_like = False
+        comment_dict = comment.to_dict()
+        if user:
             if comment in user.like_comments:
                 is_like = True
             comment_dict["is_like"] = is_like
