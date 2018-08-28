@@ -1,9 +1,10 @@
 from flask import current_app, abort, render_template, session, g, request, jsonify
 from sqlalchemy.sql.functions import user
 
+from info import db
 from info.common import user_login_data
 from info.constants import CLICK_RANK_MAX_NEWS
-from info.models import News, User
+from info.models import News, User, Comment
 from info.modules.news import news_blu
 from info.utils.response_code import RET, error_map
 
@@ -90,3 +91,61 @@ def news_collect():
 
     # 返回json结果
     return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])
+
+
+# 评论/回复
+@news_blu.route('/news_comment', methods=['POST'])
+@user_login_data
+def news_comment():
+    # 判断用户是否登录
+    user = g.user
+    if not user:
+        return jsonify(errno=RET.SESSIONERR, errmsg=error_map[RET.SESSIONERR])
+
+    # 获取参数
+    comment_content = request.json.get("comment")
+    news_id = request.json.get("news_id")
+    parent_id = request.json.get("parent_id")
+    # 校验参数
+    if not all([comment_content, news_id]):
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    try:
+        news_id = int(news_id)
+    except BaseException as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    # 判断新闻是否存在
+    try:
+        news = News.query.get(news_id)
+    except BaseException as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.DBERR, errmsg=error_map[RET.DBERR])
+
+    if not news:
+        return jsonify(errno=RET.NODATA, errmsg=error_map[RET.NODATA])
+
+    # 生成评论模型
+    comment = Comment()
+    comment.content = comment_content
+    comment.user_id = user.id
+    comment.news_id = news.id
+    if parent_id:
+        try:
+            parent_id = int(parent_id)
+        except BaseException as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+        comment.parent_id = parent_id
+
+    # 添加到数据库中
+    try:
+        db.session.add(comment)
+        db.session.commit()  # 虽然SQLALCHEMY_COMMIT_ON_TEARDOWN可以在请求结束后自动提交, 但是此处需要返回评论的主键id, 所以需要主动提交先生成主键
+    except BaseException as e:
+        current_app.logger.error(e)
+        db.session.rollback()
+        return jsonify(errno=RET.DBERR, errmsg=error_map[RET.DBERR])
+    # json返回结果
+    return jsonify(errno=RET.OK, errmsg=error_map[RET.OK], data=comment.to_dict())
