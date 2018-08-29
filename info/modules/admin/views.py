@@ -1,5 +1,6 @@
-from flask import request, render_template, current_app, redirect, url_for, session
+from flask import request, render_template, current_app, redirect, url_for, session, g
 
+from info.common import user_login_data
 from info.models import User
 from info.modules.admin import admin_blu
 
@@ -46,8 +47,10 @@ def login():
 
 # 后台首页
 @admin_blu.route('/index')
+@user_login_data
 def index():
-    return render_template("admin/index.html")
+    user = g.user
+    return render_template("admin/index.html", user=user.to_dict())
 
 
 # 后台退出
