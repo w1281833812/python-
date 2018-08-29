@@ -9,7 +9,7 @@ $(function () {
     $(".pic_info").submit(function (e) {
         e.preventDefault()
 
-        // 上传头像
+        // 上传头像  ajaxSubmit jquery提供 ajax异步表单提交
         $(this).ajaxSubmit({
             url: "/user/pic_info",
             type: "POST",
