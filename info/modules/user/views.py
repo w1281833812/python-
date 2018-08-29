@@ -1,8 +1,9 @@
 from flask import render_template, g, redirect, abort, request, jsonify, current_app
 
+from info import db
 from info.common import user_login_data
-from info.constants import USER_COLLECTION_MAX_NEWS
-from info.models import tb_user_collection, Category
+from info.constants import USER_COLLECTION_MAX_NEWS, QINIU_DOMIN_PREFIX
+from info.models import tb_user_collection, Category, News
 from info.modules.user import user_blu
 
 
@@ -164,3 +165,41 @@ def news_release():
 
         return render_template("news/user_news_release.html", categories=categories)
     # POST处理
+    title = request.form.get("title")
+    category_id = request.form.get("category_id")
+    digest = request.form.get("digest")
+    index_image = request.files.get("index_image")
+    content = request.form.get("content")
+
+    if not all([title, category_id, digest, index_image, content]):
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    try:
+        category_id = int(category_id)
+    except BaseException as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    # 创建新闻模型
+    news = News()
+    news.title = title
+    news.category_id = category_id
+    news.digest = digest
+    news.content = content
+    try:
+        img_bytes = index_image.read()
+        file_name = upload_img(img_bytes)
+    except BaseException as e:
+        current_app.logger.error(e)
+        return jsonify(errno=RET.THIRDERR, errmsg=error_map[RET.THIRDERR])
+
+    news.index_image_url = QINIU_DOMIN_PREFIX + file_name
+    # 设置其他属性
+    news.user_id = user.id
+    news.status = 1
+    news.source = "个人发布"
+    
+    # 添加到数据库中
+    db.session.add(news)
+    
+    return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])

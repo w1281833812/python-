@@ -67,7 +67,7 @@ def get_news_list():
         current_app.logger.error(e)
         return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
 
-    filter_list = []
+    filter_list = [News.status == 0]
     if cid != 1:
         filter_list.append(News.category_id == cid)
     # 根据参数查询新闻数据  按照分类进行分页查询(生成日期倒序)
