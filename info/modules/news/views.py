@@ -44,7 +44,8 @@ def news_detail(news_id):
 
     # 查询该新闻的所有评论,传到模板中
     # comments = [comment.to_dict() for comment in news.comments]
-    comments = Comment.query.filter(Comment.news_id == news.id).order_by(Comment.create_time.desc()).all()
+    # comments = Comment.query.filter(Comment.news_id == news.id).order_by(Comment.create_time.desc()).all()
+    comments = news.comments.order_by(Comment.create_time.desc()).all()
 
     # 查询当前用户是否对某条评论点过赞
     comments_list = []
@@ -55,8 +56,8 @@ def news_detail(news_id):
             if comment in user.like_comments:
                 is_like = True
             comment_dict["is_like"] = is_like
-            # 将评论字典加入列表中
-            comments_list.append(comment_dict)
+        # 将评论字典加入列表中
+        comments_list.append(comment_dict)
 
     # 将用户登录信息传到模板中
     user = user.to_dict() if user else None
