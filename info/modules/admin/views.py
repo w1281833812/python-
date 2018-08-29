@@ -1,3 +1,6 @@
+import time
+from datetime import datetime
+
 from flask import request, render_template, current_app, redirect, url_for, session, g
 
 from info.common import user_login_data
@@ -59,3 +62,46 @@ def logout():
      session.pop("user_id", None)
      session.pop("is_admin", None)
      return redirect("/")
+
+
+# 用户统计
+@admin_blu.route('/user_count')
+def user_count():
+    # 用户总数
+    total_count = 0
+    try:
+        total_count = User.query.filter(User.is_admin == False).count()
+    except BaseException as e:
+        current_app.logger.error(e)
+
+    # 月新增人数
+    mon_count = 0
+    # 获取本地日期
+    t = time.localtime()
+    # 先构建日期字符串
+    date_mon_str = "%d-%02d-01" % (t.tm_year, t.tm_mon)
+    # 日期字符串可以转为日期对象
+    date_mon = datetime.strptime(date_mon_str, "%Y-%m-%d")
+    try:
+        mon_count = User.query.filter(User.is_admin == False, User.create_time >= date_mon).count()
+    except BaseException as e:
+        current_app.logger.error(e)
+
+    # 日新增人数
+    day_count = 0
+    # 先构建日期字符串
+    date_day_str = "%d-%02d-%02d" % (t.tm_year, t.tm_mon, t.tm_mday)
+    # 日期字符串可以转为日期对象
+    date_day = datetime.strptime(date_day_str, "%Y-%m-%d")
+    try:
+        day_count = User.query.filter(User.is_admin == False, User.create_time >= date_day).count()
+    except BaseException as e:
+        current_app.logger.error(e)
+
+    data = {
+        "total_count": total_count,
+        "mon_count": mon_count,
+        "day_count": day_count
+    }
+
+    return render_template("admin/user_count.html", data=data)
