@@ -188,5 +188,6 @@ def login():
 def logout():
     # 将用户信息从session中删除  pop可以设置默认值, 当键值对不存在时, 不会报错并返回默认值
     session.pop("user_id", None)
+    session.pop("is_admin", None)
     # 将结果返回
     return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])
