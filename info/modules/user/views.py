@@ -2,7 +2,7 @@ from flask import render_template, g, redirect, abort, request, jsonify, current
 
 from info.common import user_login_data
 from info.constants import USER_COLLECTION_MAX_NEWS
-from info.models import tb_user_collection
+from info.models import tb_user_collection, Category
 from info.modules.user import user_blu
 
 
@@ -141,3 +141,26 @@ def collection():
     }
 
     return render_template("news/user_collection.html", data=data)
+
+
+# 显示新闻发布页面/提交发布
+@user_blu.route('/news_release', methods=['GET', 'POST'])
+@user_login_data
+def news_release():
+    user = g.user
+    if not user:
+        return abort(404)
+
+    if request.method == "GET":
+        # 查询所有的分类, 传到模板中
+        categories = []
+        try:
+            categories = Category.query.all()
+        except BaseException as e:
+            current_app.logger.error(e)
+
+        if len(categories):
+            categories.pop(0)
+
+        return render_template("news/user_news_release.html", categories=categories)
+    # POST处理
