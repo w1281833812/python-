@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 from flask import request, render_template, current_app, redirect, url_for, session, g
 
 from info.common import user_login_data
-from info.models import User
+from info.constants import USER_COLLECTION_MAX_NEWS
+from info.models import User, News
 from info.modules.admin import admin_blu
 
 
@@ -126,3 +127,72 @@ def user_count():
     }
 
     return render_template("admin/user_count.html", data=data)
+
+
+# 显示用户列表
+@admin_blu.route('/user_list')
+@user_login_data
+def user_list():
+
+    page = request.args.get("p", 1)
+
+    try:
+        page = int(page)
+    except BaseException as e:
+        current_app.logger.error(e)
+        page = 1
+
+    # 将当前用户的所有收藏传到模板中
+    user_list = []
+    total_page = 1
+    try:
+        pn = User.query.filter(User.is_admin == False).paginate(page, USER_COLLECTION_MAX_NEWS)
+        user_list = pn.items
+        cur_page = page
+        total_page = pn.pages
+    except BaseException as e:
+        current_app.logger.error(e)
+
+    data = {
+        "user_list": [user.to_admin_dict() for user in user_list],
+        "cur_page": page,
+        "total_page": total_page
+    }
+
+    return render_template("admin/user_list.html", data=data)
+
+
+# 显示新闻待审核列表
+@admin_blu.route('/news_review')
+@user_login_data
+def news_review():
+
+    page = request.args.get("p", 1)
+    keyword = request.args.get("keyword")
+
+    try:
+        page = int(page)
+    except BaseException as e:
+        current_app.logger.error(e)
+        page = 1
+
+    # 将所有用户发布的新闻传到模板中
+    news_list = []
+    total_page = 1
+    filter_list = [News.user_id != None]
+    if keyword:
+        filter_list.append(News.title.contains(keyword))
+    try:
+        pn = News.query.filter(*filter_list).order_by(News.create_time.desc()).paginate(page, USER_COLLECTION_MAX_NEWS)
+        news_list = pn.items
+        total_page = pn.pages
+    except BaseException as e:
+        current_app.logger.error(e)
+
+    data = {
+        "news_list": [news.to_review_dict() for news in news_list],
+        "cur_page": page,
+        "total_page": total_page
+    }
+
+    return render_template("admin/news_review.html", data=data)
