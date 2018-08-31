@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from flask import request, render_template, current_app, redirect, url_for, session, g, abort, jsonify
 
+from info import db
 from info.common import user_login_data
 from info.constants import USER_COLLECTION_MAX_NEWS, QINIU_DOMIN_PREFIX
 from info.models import User, News, Category
@@ -379,3 +380,57 @@ def news_edit_detail():
             return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
 
     return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])
+
+
+# 显示/修改分类
+@admin_blu.route('/news_type', methods=['GET', 'POST'])
+def news_type():
+    if request.method == 'GET':
+        # 查询所有分类, 传到模板中
+        try:
+            categories = Category.query.filter(Category.id != 1).all()
+        except BaseException as e:
+            current_app.logger.error(e)
+            return abort(404)
+        return render_template("admin/news_type.html", categories=categories)
+
+    # POST
+    id = request.json.get("id")
+    name = request.json.get("name")
+    if not name:
+        return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+    # 判断新增/修改
+    if id:  # 修改
+        try:
+            id = int(id)
+        except BaseException as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.PARAMERR, errmsg=error_map[RET.PARAMERR])
+
+        try:
+            category = Category.query.get(id)
+        except BaseException as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.DBERR, errmsg=error_map[RET.DBERR])
+
+        if not category:
+            return jsonify(errno=RET.NODATA, errmsg=error_map[RET.NODATA])
+
+        category.name = name
+
+    else:  # 新增
+
+        new_category = Category()
+        new_category.name = name
+        try:
+            db.session.add(new_category)
+            db.session.commit()
+        except BaseException as e:
+            current_app.logger.error(e)
+            return jsonify(errno=RET.DBERR, errmsg=error_map[RET.DBERR])
+
+    return jsonify(errno=RET.OK, errmsg=error_map[RET.OK])
+
+
+
