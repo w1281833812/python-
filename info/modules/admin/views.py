@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import request, render_template, current_app, redirect, url_for, session, g
 
@@ -98,10 +98,31 @@ def user_count():
     except BaseException as e:
         current_app.logger.error(e)
 
+    # 获取日活跃人数(每日的登录人数)
+    active_count = []
+    active_time = []
+    try:
+        for i in range(0, 30):
+            begin_date = date_day - timedelta(days=i)
+            end_date = date_day + timedelta(days=1-i)
+            # 查询登录时间 >= 某日0点, < 次日0点
+            one_day_count = User.query.filter(User.is_admin == False, User.last_login >= begin_date, User.last_login < end_date).count()
+            active_count.append(one_day_count)
+            # 将日期对象转为日期字符串
+            one_day_str = begin_date.strftime("%Y-%m-%d")
+            active_time.append(one_day_str)
+
+    except BaseException as e:
+        current_app.logger.error(e)
+
+    active_time.reverse()
+    active_count.reverse()
     data = {
         "total_count": total_count,
         "mon_count": mon_count,
-        "day_count": day_count
+        "day_count": day_count,
+        "active_count": active_count,
+        "active_time": active_time
     }
 
     return render_template("admin/user_count.html", data=data)
