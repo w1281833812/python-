@@ -5,7 +5,7 @@ from flask import request, render_template, current_app, redirect, url_for, sess
 
 from info.common import user_login_data
 from info.constants import USER_COLLECTION_MAX_NEWS
-from info.models import User, News
+from info.models import User, News, Category
 from info.modules.admin import admin_blu
 
 
@@ -292,3 +292,45 @@ def news_edit():
     }
 
     return render_template("admin/news_edit.html", data=data)
+
+
+# 显示版式编辑详情
+@admin_blu.route('/news_edit_detail')
+def news_edit_detail():
+    # 获取参数
+    news_id = request.args.get("news_id")
+    # 校验参数
+    try:
+        news_id = int(news_id)
+    except BaseException as e:
+        current_app.logger.error(e)
+        return abort(404)
+    # 查询新闻模型
+    try:
+        news = News.query.get(news_id)
+    except BaseException as e:
+        current_app.logger.error(e)
+        return abort(404)
+
+    # 将所有的分类传到模板中
+    categories = []
+    try:
+        categories = Category.query.all()
+    except BaseException as e:
+        current_app.logger.error(e)
+        return abort(404)
+    # 标记新闻对应的当前分类
+    category_list = []
+    for category in categories:
+        is_selected = False
+        category_dict = category.to_dict()
+        if category.id == news.category_id:
+            is_selected = True
+
+        category_dict["is_selected"] = is_selected
+        category_list.append(category_dict)
+
+    if len(category_list):
+        category_list.pop(0)
+    # 将模型数据传到模板中
+    return render_template("admin/news_edit_detail.html", news=news.to_dict(), category_list=category_list)
