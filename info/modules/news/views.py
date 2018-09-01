@@ -59,11 +59,19 @@ def news_detail(news_id):
         # 将评论字典加入列表中
         comments_list.append(comment_dict)
 
+    # 查询当前登录用户是否关注了新闻的作者
+    is_followed = False
+    # 判断是否登录以及新闻是否有作者
+    if user and news.user:
+        # 判断作者是否被关注
+        if news.user in user.followed:
+            is_followed = True
+
     # 将用户登录信息传到模板中
     user = user.to_dict() if user else None
 
     # 将模型数据传到模板中
-    return render_template("news/detail.html", news=news.to_dict(), rank_list=rank_list, user=user, is_collected=is_collected, comments=comments_list)
+    return render_template("news/detail.html", news=news.to_dict(), rank_list=rank_list, user=user, is_collected=is_collected, comments=comments_list, is_followed=is_followed)
 
 
 # 收藏/取消收藏

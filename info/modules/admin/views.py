@@ -202,7 +202,7 @@ def news_review():
 
 
 # 显示待审核详情
-@admin_blu.route('/news_review_detail<int:news_id>')
+@admin_blu.route('/news_review_detail/<int:news_id>')
 def news_review_detail(news_id):
     # 根据新闻id查询该新闻
     try:
