@@ -239,3 +239,39 @@ def news_list():
     }
 
     return render_template("news/user_news_list.html", data=data)
+
+
+# 显示我的关注
+@user_blu.route('/user_follow')
+@user_login_data
+def user_follow():
+    user = g.user
+    if not user:
+        return abort(404)
+
+    page = request.args.get("p", 1)
+
+    try:
+        page = int(page)
+    except BaseException as e:
+        current_app.logger.error(e)
+        page = 1
+
+    # 将当前用户的所有的人传到模板中
+    author_list = []
+    total_page = 1
+    try:
+        pn = user.followed.paginate(page, USER_COLLECTION_MAX_NEWS)
+        author_list = pn.items
+        cur_page = page
+        total_page = pn.pages
+    except BaseException as e:
+        current_app.logger.error(e)
+
+    data = {
+        "author_list": [author.to_dict() for author in author_list],
+        "cur_page": page,
+        "total_page": total_page
+    }
+
+    return render_template("news/user_follow.html", data=data)
