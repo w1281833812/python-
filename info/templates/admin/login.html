@@ -17,6 +17,7 @@
         {% if errmsg %}
     		<div class="error_tip" style="display: block">{{ errmsg }}</div>
         {% endif %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 		<input type="submit" value="登 录" class="input_sub">
 	</form>
 	<div class="login_bg"></div>
