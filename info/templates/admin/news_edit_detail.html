@@ -58,7 +58,7 @@
             </div>
             <!-- 隐藏字段,传递news_id -->
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="news_id" value="1">
+            <input type="hidden" name="news_id" value="{{ news.id }}">
         </form>
     </div>
 </body>
